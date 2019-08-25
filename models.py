@@ -9,6 +9,10 @@ class OreDict(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Ore Dictionary'
+        verbose_name_plural = 'Ore Dictionaries'
+
 class Mod(models.Model):
     name = models.CharField(max_length = 200)
 
@@ -41,6 +45,7 @@ class Item(models.Model):
                     display_name = item_info['display_name'],
                     mod = in_mod,
                     stack = int(item_info['stack']),
+                    itemid = item_info['itemid']
                 )                
 
     @staticmethod
@@ -51,7 +56,7 @@ class Item(models.Model):
             return Item.objects.get(display_name = display_name, mod__name = mod)
 
 class Machine(models.Model):
-    name = models.CharField(max_length = 200)
+    name = models.CharField(max_length = 400)
     aliases = models.ManyToManyField('self', blank = True)
     
     def __str__(self):
@@ -69,7 +74,7 @@ class Recipe(models.Model):
         verbose_name_plural = 'Recipes'
     
     def __str__(self):
-        return 'ID {} | {}x {}'.format(str(self.pk), self.amount, str(self.output))
+        return '{}x {}'.format(self.amount, str(self.output))
 
 
 class ByProducts(models.Model):
@@ -110,12 +115,26 @@ class CraftingRecipe(Recipe):
 
 class Slotdata(models.Model):
     recipe = models.ForeignKey(CraftingRecipe,on_delete = models.CASCADE)
-    slots = models.CharField('Slots', validators=[int_list_validator], max_length = 100, default = '1')  
+    slot = models.IntegerField('Slot', default= 1)
     item = models.ForeignKey(Item, on_delete = models.CASCADE, verbose_name = 'Item')
     
     def __str__(self):
-        return 'Slots {}: {}'.format(self.slots, str(self.item))
+        return 'Slot {}: {}'.format(self.slot, str(self.item))
 
     class Meta:
         verbose_name = 'Slot Data'
         verbose_name_plural = 'Slot Data'
+
+class ModPack(models.Model):
+    name = models.CharField(max_length = 400)
+    mods = models.ManyToManyField(Mod, blank = True, verbose_name = 'Mods')
+
+    def __str__(self):
+        return str(name)
+
+class Group(models.Model):
+    name = models.CharField(max_length = 400)
+    items = models.ManyToManyField(Item, blank = True, verbose_name = 'Items')
+
+    def __str__(self):
+        return str(name)

@@ -1,0 +1,120 @@
+Minecraft
+Advanced Solar Panels
+AgriCraft
+AOBD 2
+Applied Energistics 2
+Avaritia
+Baubles
+BDLib
+BiblioCraft
+BiblioWoods Biomes O' Plenty
+BiblioWoods Forestry
+BiblioWoods Natura
+Big Reactors
+Binnie's Mods
+Biomes O' Plenty
+Blood Magic
+Botania
+Brandon's Core
+bspkrsCore
+BuildCraft
+Buildcraft Compat
+Carpenter's Blocks
+Chisel 2
+CodeChickenCore
+CoFH Core
+CoFH Lib
+ComputerCraft
+Custom Main Menu
+Decocraft
+Dense Ores
+Draconic Evolution
+Ender Zoo
+EnderCore
+EnderIO
+EnderStorage
+EnderTech
+Extra Cells 2
+Extra Utilities
+ExtraTiC
+Fastcraft
+FastLeafDecay
+Forbidden Magic
+Forestry
+FTB Utilities
+FTBLib
+FTBTweaks
+Funky Locomotion
+Gendustry
+Gravitation Suite
+Guide-API
+Hat Stand
+Hats
+Headcrumbs
+iChunUtil
+Immersive Engineering
+Immersive Integration
+Immibis Core
+IndustrialCraft 2
+INpureCore
+Inventory Tweaks
+Iron Chests
+JABBA
+JourneyMap
+Logistics Pipes
+Magic Bees
+Mantle
+McJtyLib
+MineFactory Reloaded
+MineTweaker 3
+ModTweaker 2
+Morpheus
+Mystcraft
+Natura
+NEI Addons
+NEI Integration
+Nether Ores
+Not Enough Items
+Not Enough Resources
+Nuclear Control
+Nuclear Control 2
+OpenBlocks
+OpenModsLib
+OpenPeripheral Addons
+OpenPeripheral Core
+OpenPeripheral Integration
+Pam's HarvestCraft
+Portal Gun (Mod)|Portal Gun
+Project Red
+Railcraft
+Redstone Arsenal
+Resource Loader
+RFTools
+Runic Dungeons
+Simply Jetpacks
+Solar Expansion
+Springboards
+Steve's Addons
+Steve's Carts 2
+Steve's Factory Manager
+Steve's Workshop
+Storage Drawers
+Thaumcraft 4
+Thaumcraft NEI Plugin
+Thaumic Energistics
+Thaumic Exploration
+Thaumic Tinkerer 2
+Thermal Dynamics
+Thermal Expansion
+Thermal Foundation
+TiC Tooltips
+Tinkers' Construct
+Tinkers' Mechworks
+Translocators
+ttCore
+Twilight Forest
+Waila
+Waila Harvestability
+Wawla
+Witchery
+Wireless Redstone Chicken Bones Edition|WR-CBE

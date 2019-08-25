@@ -110,7 +110,7 @@ def getIO_crafting_recipe(recipe_text):
     inputs = []
     output = {'amount' : 1}
     slot_dict = {
-        value : index + 1 for index, value in enumerate(str(letter) + str(num) for letter in 'ABC' for num in range(1,4))
+        value : index + 1 for index, value in enumerate(str(letter) + str(num) for num in range(1,4) for letter in 'ABC')
     }
     for term in re.split(r' *\|', recipe_text.replace('\n','')):
         if re.match(r'[A-C][1-3] *= *.+', term):
@@ -119,6 +119,7 @@ def getIO_crafting_recipe(recipe_text):
             inputs.append({'display_name' : display_name, 'mod' : mod, 'amount' : 1, 'slot' : slot_dict[slot_code], 'title' : title})
         elif re.match(r'Output *= *', term):
             output['display_name'], output['mod'] = re.search(r'Output *= *' + parse_item_re, term).groups()
+            output['title'] = re.search(r'Output *= *(.+?)$', term).group(1)
         elif re.match(r'OA *= *', term):
             output['amount'] = re.search(r'OA *= *(\d+)', term).group(1)
     return inputs, [output]

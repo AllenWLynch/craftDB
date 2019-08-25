@@ -143,7 +143,7 @@ def parse_recipe(recipe_on_page):
 
     for combo in product(*item_sets):
         for index, item in enumerate(combo):
-
+            pass
     ## continue with process
     
     return log, item_sets

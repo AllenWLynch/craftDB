@@ -39,7 +39,7 @@ class Item(models.Model):
             try:
                 in_mod = Mod.objects.get(name = item_info['mod'])
             except Mod.DoesNotExist:
-                raise Exception(item_info['display_name'] + ' is not in your modpack')
+                raise AssertionError(item_info['display_name'] + ' is not in your modpack')
             else:
                 return Item.objects.create(
                     display_name = item_info['display_name'],

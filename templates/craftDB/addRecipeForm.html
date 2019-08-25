@@ -1,11 +1,15 @@
-<h1>Add Item</h1>
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>Add Recipes</h1>
 
 <form action="{% url 'craftDB:scrapedata' %}" method="post">
 {% csrf_token %}
-<h4>Paste in URL from ftbwiki.org for your item:</h4>
-Example: ftbwiki.org/Furnace<br>
+<h2>Paste in URL from ftbwiki.org for your item:</h2>
+Example: <a href="ftbwiki.org/Furnace">ftbwiki.org/Furnace</a><br>
 <input type="text" name="pagename" value = {% if pre_fill %} {{pre_fill}} {% else %} "" {% endif %}><br>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 <br>
 <input type="submit" value="Get Wikidata">
 </form>
+{% endblock %}

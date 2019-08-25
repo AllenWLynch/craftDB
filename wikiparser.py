@@ -15,23 +15,6 @@ def parse_pagetitle(title):
     return r
 
 
-def get_wikitext(page_name):
-    parse_params = {
-        'action' : 'parse',
-        'page' : page_name,
-        'format': 'json',
-        'prop' : 'wikitext'
-    }
-    r = requests.get(api_endpoint, parse_params)
-    assert(r.status_code == 200), 'Page "' + pageName + '" does not exist'
-    try:
-        return json.loads(r.text)['parse']['wikitext']['*']
-    except KeyError as err:
-        raise Exception('This page does not contain wikitext')
-    except Exception as err:
-        raise Exception('An unexpected error occured while parsing wikidata.')
-
-
 class NoIDException(Exception):
     pass
 
@@ -44,12 +27,32 @@ class IncompletePageException(Exception):
 class NoOreDictException(Exception):
     pass
 
+class NoDataException(Exception):
+    pass
+
+def get_wikitext(page_name):
+    parse_params = {
+        'action' : 'parse',
+        'page' : page_name,
+        'format': 'json',
+        'prop' : 'wikitext'
+    }
+    r = requests.get(api_endpoint, parse_params)
+    assert(r.status_code == 200), 'Page "' + pageName + '" does not exist'
+    try:
+        return json.loads(r.text)['parse']['wikitext']['*']
+    except KeyError as err:
+        raise NoDataException('This page ({}) does not contain wikitext'.format(page_name))
+    except Exception as err:
+        raise Exception('An unexpected error occured while parsing wikidata.')
+
+
 def get_infobox(wikitext):
     infobox = re.search(r'^{{Infobox/(?:(?:Block)|(?:Item)).+?\|(.+?)^}}', wikitext, re.MULTILINE | re.DOTALL)
     assert(infobox), 'No infobox found on this page.'
     return infobox.group(1)
 
-def scrape_infobox(wikitext):
+def scrape_infobox(wikitext, page_name):
     try:
         infobox = get_infobox(wikitext)
     except AssertionError:
@@ -63,13 +66,16 @@ def scrape_infobox(wikitext):
     try:
         stack = re.search(r'\|stack *= *(\d{1,2})\n', infobox).group(1)
         mod = re.search(r'\|mod * = *(.+?)\n', infobox).group(1)
-        display_name = re.search(r"'''([\w\|\s]+?)'''",wikitext).group(1)
+        display_name = re.search(r"'''((?:[\w\|\s]+?)|(?:{{PAGENAME}}))'''",wikitext).group(1)
+
+        if display_name == '{{PAGENAME}}':
+            display_name = page_name
 
         ore_search = re.search(r'\|oredict *= *([\w,;]+?)\n', infobox)
         oredict = ore_search.group(1).split(';') if ore_search else {}
         
     except Exception as err:
-        raise IncompletePageException('Incomplete information on page.', err)
+        raise IncompletePageException('Incomplete information on page: {}.'.format(page_name))
     else:
         return {
             'itemid' : item_id,
@@ -97,12 +103,14 @@ class NoRecipesException(Exception):
 
 def scrape_recipes(wikitext):
     try:
-        return [ 
-            {'header': 'Mod:' + re.match(r'{{ModLink\|(.+?)}}', section_name).group(1) if re.match(r'{{ModLink\|(.+?)}}', section_name) else section_name,
-            'grid': grid_type, 'recipe_terms': recipe}
-            for section_name, section in re.findall(r'==+ *(.+?) *==+\n(.+?)^(?===+)', wikitext, re.MULTILINE | re.DOTALL)
-            for grid_type, recipe in re.findall(r'^{{Grid/(.+?)\n\|(.+?)}}$', section, re.MULTILINE | re.DOTALL)
-        ]
+        recipes = []
+        section_num = 1
+        for section_name, section in re.findall(r'==+ *(.+?) *==+\n(.+?)^(?===+)', wikitext, re.MULTILINE | re.DOTALL):
+            for grid_type, recipe in re.findall(r'^{{Grid/(.+?)\n\|(.+?)}}$', section, re.MULTILINE | re.DOTALL):
+                recipes.append({'header': 'Mod:' + re.match(r'{{ModLink\|(.+?)}}', section_name).group(1) if re.match(r'{{ModLink\|(.+?)}}', section_name) else section_name,
+                'grid': grid_type, 'recipe_terms': recipe, 'section_num' : section_num})
+            section_num += 1
+        return recipes
     except:
         raise NoRecipesException('No recipes detected on this page.')
     

@@ -1,3 +1,6 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
 <h1> Found Recipes for: {{ output }} </h1>
 Choose recipes to commit to CraftDB:<br>
 
@@ -13,3 +16,4 @@ Hold down CTRL to select multiple!<br><br>
 <input type = "reset" value = "Cancel">
 <input type="submit" value="Save to CraftDB">
 </form>
+{% endblock %}

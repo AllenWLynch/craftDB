@@ -1,5 +1,13 @@
-<h1>Adding Recipes</h1>
+{% extends "admin/base_site.html" %}
 
+{% block content %}
+<h1>Adding Recipes for: {{ search_page }}</h1>
+
+<ul>
 {% for entry in log %}
-{{entry | safe}}<br>
+    <li>
+    {{entry | safe}}<br>
+    </li>
 {% endfor %}
+</ul>
+{% endblock %}

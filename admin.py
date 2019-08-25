@@ -1,7 +1,23 @@
 from django.contrib import admin
 from craftDB.models import *
 from django import forms
+from django.contrib.admin import AdminSite
+from craftDB.views import addRecipeForm, scrapeData, saveRecipes
+from django.urls import path
 
+class MyAdminSite(AdminSite):
+    site_header = 'craftDB Administration'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('addrecipe', self.admin_view(addRecipeForm), name = 'addRecipeForm'),
+            path('scrapedata',self.admin_view(scrapeData), name = 'scrapedata'),
+            path('saverecipes',self.admin_view(saveRecipes), name = 'saverecipes'),
+        ]
+        return urls + my_urls
+
+myadmin = MyAdminSite(name = 'craftadmin')
 
 class RecipeAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -43,11 +59,11 @@ class MachineAdmin(admin.ModelAdmin):
     exclude = ('aliases',)
     search_fields = ['name']
 
-admin.site.register(Item, ItemAdmin)
-admin.site.register(Machine, MachineAdmin)
-admin.site.register(Mod, ModAdmin)
-admin.site.register(OreDict)
-admin.site.register(ModPack)
-admin.site.register(Group)
-admin.site.register(CraftingRecipe, CraftingRecipeAdmin)
-admin.site.register(MachineRecipe, MachineRecipeAdmin)
+myadmin.register(Item, ItemAdmin)
+myadmin.register(Machine, MachineAdmin)
+myadmin.register(Mod, ModAdmin)
+myadmin.register(OreDict)
+myadmin.register(ModPack)
+myadmin.register(Group)
+myadmin.register(CraftingRecipe, CraftingRecipeAdmin)
+myadmin.register(MachineRecipe, MachineRecipeAdmin)

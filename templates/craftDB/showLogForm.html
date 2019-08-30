@@ -10,4 +10,8 @@
     </li>
 {% endfor %}
 </ul>
-{% endblock %}
+<form>
+<input type="submit" formaction="{% url 'craftadmin:addrecipe' %}" value="Add Another">
+<input type="submit" formaction="{% url 'craftadmin:index' %}" value="Home">
+</form>
+{% endblock %}  

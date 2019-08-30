@@ -2,8 +2,8 @@ from django.contrib import admin
 from craftDB.models import *
 from django import forms
 from django.contrib.admin import AdminSite
-from craftDB.views import addRecipeForm, scrapeData, saveRecipes
-from django.urls import path
+from craftDB.views import addRecipeForm, scrapeData, saveRecipes, disambiguation, index
+from django.urls import path, reverse
 
 class MyAdminSite(AdminSite):
     site_header = 'craftDB Administration'
@@ -11,13 +11,15 @@ class MyAdminSite(AdminSite):
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('addrecipe', self.admin_view(addRecipeForm), name = 'addRecipeForm'),
+            path('addrecipe', self.admin_view(addRecipeForm), name = 'addrecipe'),
+            path('disambiguation', self.admin_view(disambiguation), name = 'disambiguation'),
             path('scrapedata',self.admin_view(scrapeData), name = 'scrapedata'),
             path('saverecipes',self.admin_view(saveRecipes), name = 'saverecipes'),
         ]
         return urls + my_urls
 
 myadmin = MyAdminSite(name = 'craftadmin')
+myadmin.site_url = '/craftDB'
 
 class RecipeAdmin(admin.ModelAdmin):
     fieldsets = [

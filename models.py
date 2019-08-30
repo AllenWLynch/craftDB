@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, int_list_validator
 from collections import Counter
+from django.forms import ModelForm
 # Create your models here.
 
 class OreDict(models.Model):
@@ -54,6 +55,11 @@ class Item(models.Model):
             return Item.objects.get(display_name = display_name)
         else:
             return Item.objects.get(display_name = display_name, mod__name = mod)
+
+class ItemForm(ModelForm):
+    class Meta:
+        model = Item
+        fields = ['display_name','itemid','stack','mod']
 
 class Machine(models.Model):
     name = models.CharField(max_length = 400)

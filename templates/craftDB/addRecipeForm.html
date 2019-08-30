@@ -1,13 +1,13 @@
 {% extends "admin/base_site.html" %}
 
 {% block content %}
-<h1>Add Recipes</h1>
+<h1>Add Recipe from FTB Wiki</h1>
 
-<form action="{% url 'craftDB:scrapedata' %}" method="post">
+<form action="{% url 'craftadmin:disambiguation' %}" method="post">
 {% csrf_token %}
-<h2>Paste in URL from ftbwiki.org for your item:</h2>
-Example: <a href="ftbwiki.org/Furnace">ftbwiki.org/Furnace</a><br>
-<input type="text" name="pagename" value = {% if pre_fill %} {{pre_fill}} {% else %} "" {% endif %}><br>
+<h2>Search wiki for item:</h2>
+Example search: <a href="https://ftbwiki.org/Mining_Laser">Mining Laser</a><br>
+<input type="text" name="search_title" value = {% if pre_fill %} {{pre_fill}} {% else %} "" {% endif %}><br>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 <br>
 <input type="submit" value="Get Wikidata">

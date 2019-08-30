@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>Disambiguation</h1>
+<h2>Choose Page to Parse</h2>
+
+<form action="{% url 'craftadmin:scrapedata' %}" method="post">
+{% csrf_token %}
+{% for page in pages %}
+<input type='radio' name='page_selection' value="{{page}}" id={{page}}>
+<label for={{page}}><a href="https://ftbwiki.org/{{page}}">{{page}}</a></label><br>
+{% endfor %}
+<br><input type="submit" value="Get Wikidata">
+</form>
+{% endblock %}

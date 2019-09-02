@@ -10,6 +10,7 @@
 <input type='radio' name='page_selection' value="{{page}}" id={{page}}>
 <label for={{page}}><a href="https://ftbwiki.org/{{page}}">{{page}}</a></label><br>
 {% endfor %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 <br><input type="submit" value="Get Wikidata">
 </form>
 {% endblock %}

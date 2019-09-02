@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}"><img src="{% static "admin/craftDB_logo.png" %}" height="80px"></a></h1>
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+    <a href="{% url 'craftDB:index' %}">Home</a>
+    &nbsp|&nbsp             
+    <a href="/craftDB/craftadmin">Admin Site</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+<h1>CraftDB Endpoints</h1>
+<h2>craftDB/items ? modpack = <i>modpack_name</i></h2>
+<p>Returns new-line delineated list of unique item names saved in the specified modpack.</p>
+<br>
+<h2>craftDB/instructions ? for = <i>unique_item_name</i> & quantity = <i>number_to_make</i> & inventory = <i>inventory_dict (json)</i></h2>
+<p>Returns a lua-serialized queue for crafting with recipeID and quantity of each step.</p>
+<br>
+<h2>craftDB/recipes/<i>id</i></h2>
+<p>Returns in-depth information for crafting of specified recipe.</p>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

@@ -82,7 +82,14 @@ class Recipe(models.Model):
     def __str__(self):
         return '{}x {}'.format(self.amount, str(self.output))
 
-
+    def required_resources(self):
+        try:
+            return self.craftingrecipe.required_resources()
+        except Recipe.craftingrecipe.RelatedObjectDoesNotExist:
+            return self.machinerecipe.required_resources()
+        raise AssertionError('Recipe is neither crafting nor machine recipe.')
+    
+    
 class ByProducts(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete = models.CASCADE)
     item = models.ForeignKey(Item, on_delete = models.CASCADE, verbose_name = 'Byproduct')
@@ -97,6 +104,7 @@ class ByProducts(models.Model):
 
 
 class MachineRecipe(Recipe):
+
     machine = models.ForeignKey(Machine, on_delete = models.CASCADE, verbose_name = 'Machine')
 
     def required_resources(self):
@@ -116,8 +124,11 @@ class CraftingRecipe(Recipe):
     def required_resources(self):
         input_counter = Counter()
         for _input in self.slotdata_set.all():
-            input_counter[_input.item.itemid] += (len(_input.slots) + 1)/2
+            input_counter[_input.item.itemid] += 1
         return input_counter
+
+    def min_stack(self):
+        return min([ slot.item.stack for slot in self.slotdata_set.all()])
 
 class Slotdata(models.Model):
     recipe = models.ForeignKey(CraftingRecipe,on_delete = models.CASCADE)
@@ -136,11 +147,11 @@ class ModPack(models.Model):
     mods = models.ManyToManyField(Mod, blank = True, verbose_name = 'Mods')
 
     def __str__(self):
-        return str(name)
+        return str(self.name)
 
 class Group(models.Model):
     name = models.CharField(max_length = 400)
     items = models.ManyToManyField(Item, blank = True, verbose_name = 'Items')
 
     def __str__(self):
-        return str(name)
+        return str(self.name)

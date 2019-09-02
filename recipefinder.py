@@ -117,7 +117,7 @@ def parse_recipe(log, page_title, output_item, header, grid, recipe_terms, secti
             recipes_made += 1
             if grid == 'Crafting Table':
                 new_recipe = CraftingRecipe.objects.create(output = output_item, amount = output_info['amount'])
-                for item, input_info in zip(combo, inputs):
+                for index, item, input_info in enumerate(zip(combo, inputs)):
                     new_recipe.slotdata_set.create(slot = int(input_info['slot']), item = item)
                 for byproduct in byproducts:
                     new_recipe.byproduct_set.create(byproduct)

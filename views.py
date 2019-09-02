@@ -7,9 +7,34 @@ from itertools import product
 from django.urls import reverse
 import requests
 from craftDB.recipefinder import hitDB_or_wiki_for_item, parse_recipe
+from django.shortcuts import get_object_or_404
+import craftDB.api_helper as api
+
 
 def index(request):
-    return HttpResponse("Welcome to your CraftDB")
+    return render(request, 'craftDB/index.html')
+
+def get_item_names(request):
+    if request.method == 'GET':
+        modpack = get_object_or_404(ModPack, name = request.GET['modpack'])
+        item_names = set([
+            str(item) for mod in modpack.mods.all() for item in mod.item_set.all()
+        ])
+        return HttpResponse('\n'.join(item_names), content_type='text/plain')
+    else:
+        return HttpResponse(status = 404)
+
+def get_recipe_info(request, id):
+    if request.method == 'GET':
+        recipe = get_object_or_404(Recipe, pk = id)
+        try:
+            translation_dict = api.convert_recipe_to_lua(recipe)
+        except AssertionError:
+            return HttpResponse(status = 500)
+        
+        return HttpResponse(translation_dict, content_type = 'text/plain')
+    else:
+        return HttpResponse(status = 404)
 
 def addRecipeForm(request):
     return render(request, 'craftDB/addRecipeForm.html')

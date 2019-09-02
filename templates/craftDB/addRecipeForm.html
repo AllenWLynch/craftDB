@@ -1,15 +1,15 @@
 {% extends "admin/base_site.html" %}
 
 {% block content %}
+<div id="content-main">
 <h1>Add Recipe from FTB Wiki</h1>
 
 <form action="{% url 'craftadmin:disambiguation' %}" method="post">
 {% csrf_token %}
-<h2>Search wiki for item:</h2>
-Example search: <a href="https://ftbwiki.org/Mining_Laser">Mining Laser</a><br>
-<input type="text" name="search_title" value = {% if pre_fill %} {{pre_fill}} {% else %} "" {% endif %}><br>
+<h3>Search wiki for item:</h3>
+<input type="text" name="search_title" placeholder="Mining Laser" value = {% if pre_fill %} {{pre_fill}} {% else %} "" {% endif %}>
+<input type="submit" value="Get Wikidata >"><br>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-<br>
-<input type="submit" value="Get Wikidata">
 </form>
 {% endblock %}
+</div>

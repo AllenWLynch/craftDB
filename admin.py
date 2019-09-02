@@ -41,7 +41,13 @@ class MachineInputInLine(admin.TabularInline):
     extra = 0
     autocomplete_fields = ['item']
 
-class MachineRecipeAdmin(RecipeAdmin):
+class MachineRecipeAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('OUTPUT', { 'fields' : ['output','amount',]}),
+        ('MACHINING', {'fields' : ['machine']}),
+    ]
+    list_display = ('id','output','amount')
+    autocomplete_fields = ['output','machine']
     inlines = [MachineInputInLine]
     
 class ItemAdmin(admin.ModelAdmin):

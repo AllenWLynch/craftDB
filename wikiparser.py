@@ -49,6 +49,9 @@ class NoWikiTextException(BadItemPageException):
 class NoRecipesException(Exception):
     pass
 
+class NoImageException(Exception):
+    pass
+
 def get_wikitext(page_name):
     parse_params = {
         'action' : 'parse',
@@ -65,6 +68,7 @@ class PageParser():
 
     def __init__(self, page_name):
         self.page_name = page_name
+        self.item_type = None
         try:
             self.content = get_wikitext(page_name)
         except KeyError:
@@ -73,12 +77,14 @@ class PageParser():
 
     def scrape_infobox(self):
 
-        infobox_search = re.search(r'^{{Infobox/(?:(?:Block)|(?:Item)).+?\|(.+?)^}}', self.content, re.MULTILINE | re.DOTALL)
+        infobox_search = re.search(r'^{{Infobox/((?:Block)|(?:Item))\n\|(.+?)^}}', self.content, re.MULTILINE | re.DOTALL)
         if not infobox_search:
             raise NoInfoboxException('Page: {} does not contain wikitext defining item'.format(self.page_name))
-        infobox = infobox_search.group(1)
+        item_type, infobox = infobox_search.groups()
         
         fields = {}
+        
+        self.item_type = item_type
 
         try:
             fields['itemid'] = re.search(r'\|idname *= *([\w:\|\d\.]+?)\n', infobox.replace('{{!}}', '|')).group(1)
@@ -105,20 +111,37 @@ class PageParser():
         #ore_search = re.search(r'\|oredict *= *([\w,;]+?)\n', infobox)
         #fields['oredict'] = ore_search.group(1).split(';') if ore_search else {}
             
-        return fields
+        return item_type, fields
     
     def scrape_recipes(self):
         try:
             recipes = []
             section_num = 1
             for section_name, section in re.findall(r'==+ *(.+?) *==+\n(.+?)^(?===+)', self.content, re.MULTILINE | re.DOTALL):
-                for grid_type, recipe in re.findall(r'^{{Grid/(.+?)\n\|(.+?)}}$', section, re.MULTILINE | re.DOTALL):
-                    recipes.append({'header': 'Mod:' + re.match(r'{{ModLink\|(.+?)}}', section_name).group(1) if re.match(r'{{ModLink\|(.+?)}}', section_name) else section_name,
-                    'grid': grid_type, 'recipe_terms': recipe, 'section_num' : section_num})
+                for modification, grid_type, recipe in re.findall(r'(?:^\*\+{{ModLink\|(\w+?)}}\n)?^{{Grid/(.+?)\n\|(.+?)}}$', section, re.MULTILINE | re.DOTALL):
+                    recipes.append({'header': section_name,
+                                    'grid': grid_type, 
+                                    'recipe_terms': recipe, 
+                                    'section_num' : section_num, 
+                                    'modification' : modification})
                 section_num += 1
             return recipes
         except:
             raise NoRecipesException('Page: {} does not contain recipes'.format(self.page_name))
+
+    def get_main_image(self):
+        
+        assert(self.item_type), 'Must scrape infobox before getting image so that page Item/Block type is assigned'
+        find_image_titled = 'File:{}_{}.png'.format(self.item_type, self.page_name).replace(' ', '_')
+        print(find_image_titled)
+        response = requests.get('https://ftbwiki.org/api.php?action=query&format=json&prop=imageinfo&titles={}&iiprop=url'.format(find_image_titled))
+        try:
+            raw_url = re.search(r'\[\{\"url\":\"(.+?)\"',response.text).group(1)
+        except Exception:
+            raise NoImageException('Page: {} contains no images'.format(self.page_name))
+        
+        return find_image_titled, raw_url
+        
 
 def getIO_crafting_recipe(recipe_text):
     inputs = []
@@ -160,4 +183,11 @@ def scrape_oredict(dict_name):
         if len(results) == 0:
             raise NoOreDictException('OreDict {} contains no items'.format(dict_name))
         return results.keys()
+
+
+#gets mods in modpacks
+#https://ftbwiki.org/api.php?action=ask&query=[[Category:Modpacks]]|format=json|?fulltext
+
+#get all modpacks with mod:
+#https://ftbwiki.org/api.php?action=ask&query=[[Category:Modpacks]][[Has mod::mod_name]]|format=list
 

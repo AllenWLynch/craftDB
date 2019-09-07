@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.admin import AdminSite
 from craftDB.views import addRecipeForm, scrapeData, saveRecipes, disambiguation, index
 from django.urls import path, reverse
+from  django.contrib.contenttypes.admin import GenericTabularInline
 
 class MyAdminSite(AdminSite):
     site_header = 'craftDB Administration'
@@ -31,15 +32,15 @@ class RecipeAdmin(admin.ModelAdmin):
 class SlotdataInLine(admin.TabularInline):
     model = Slotdata
     extra = 0
-    autocomplete_fields = ['item']
 
 class CraftingRecipeAdmin(RecipeAdmin):
-    inlines = [SlotdataInLine]
+    #inlines = [SlotdataInLine]
+    pass
 
 class MachineInputInLine(admin.TabularInline):
     model = MachineInput
     extra = 0
-    autocomplete_fields = ['item']
+    #autocomplete_fields = ['item']
 
 class MachineRecipeAdmin(admin.ModelAdmin):
     fieldsets = [
@@ -53,6 +54,7 @@ class MachineRecipeAdmin(admin.ModelAdmin):
 class ItemAdmin(admin.ModelAdmin):
     search_fields = ['display_name']
     autocomplete_fields = ['mod']
+    list_display = ('display_name', 'mod','sprite')
 
 class ModAdmin(admin.ModelAdmin):
     search_fields = ['name']

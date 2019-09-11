@@ -11,7 +11,7 @@ from django.urls import reverse
 
 class OreDict(models.Model):
     name = models.CharField(max_length = 200)
-    leading_item = models.ForeignKey('Item', on_delete = models.CASCADE, 
+    leading_item = models.ForeignKey('Item', on_delete = models.SET_NULL, 
                                      verbose_name = 'Representative Item', null = True, blank = True,related_name='lead')
 
     def __str__(self):
@@ -35,10 +35,22 @@ class OreDict(models.Model):
 
 class Mod(models.Model):
     name = models.CharField(max_length = 200)
-    abbrevations = models.CharField(max_length = 200, default = '')
+    abbreviations = models.CharField(max_length = 200, default = '')
+    overwriting_mod = models.ForeignKey('self', blank = True, null = True, 
+                                        on_delete = models.SET_NULL, verbose_name = 'Overwritten By')
+    
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def find_mod(name):
+        try:
+            return Mod.objects.get(name = name)
+        except Mod.DoesNotExist:
+            return Mod.objects.get(abbreviations__contains = '|' + name + '|')
 
 class Item(models.Model):
     display_name = models.CharField('Item Name', max_length = 300)
@@ -104,12 +116,12 @@ class Machine(models.Model):
         return [self.name, *self.aliases.values_list('name', flat = True)]
 
 
-
 class Recipe(models.Model):
     output = models.ForeignKey(Item, on_delete = models.CASCADE, verbose_name = 'Output')
     amount = models.IntegerField('Amount',default=1)
     from_mod = models.ForeignKey(Mod, on_delete = models.CASCADE, verbose_name = 'From Mod')
-    
+    dependencies = models.ManyToManyField(Mod, blank = True, related_name='dependent_recipes')
+
     class Meta:
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
@@ -124,7 +136,28 @@ class Recipe(models.Model):
             return self.machinerecipe.required_resources()
         raise AssertionError('Recipe is neither crafting nor machine recipe.')
     
-    
+    def is_usable_recipe(self, modpack):
+
+        def recurse_is_usable(item, mod, visited_set = set()):
+            if mod in visited_set:
+                return True
+            if item in mod.recipe_set.values_list('output'):
+                return False
+            if mod.overwriting_mod:
+                return recurse_is_usable(item, mod.overwriting_mod, visited_set | mod)
+            else:
+                return True
+
+        not_overwritten = True
+        if self.from_mod.overwriting_mod:
+            not_overwritten = recurse_is_usable(self.output, self.from_mod.overwriting_mod)
+        
+        dependencies_in_pack = all([mod_dependency in modpack.mods.all() for mod_dependency in self.dependencies.all()])
+
+        items_in_pack = all([Item.objects.get(pk = resource).mod in modpack.mods.all()])
+
+        return not_overwritten and dependencies_in_pack and items_in_pack
+
 class ByProducts(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete = models.CASCADE)
     item = models.ForeignKey(Item, on_delete = models.CASCADE, verbose_name = 'Byproduct')

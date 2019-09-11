@@ -22,12 +22,18 @@ class MyAdminSite(AdminSite):
 myadmin = MyAdminSite(name = 'craftadmin')
 myadmin.site_url = '/craftDB'
 
+class RecipeDependencyInline(admin.TabularInline):
+    model = Recipe.dependencies.through
+    extra = 0
+
 class RecipeAdmin(admin.ModelAdmin):
     fieldsets = [
         ('OUTPUT', { 'fields' : ['output','amount',]}),
+        ('DEPENDENCIES', {'fields' : ['from_mod',]})
     ]
     list_display = ('id','output','amount')
     autocomplete_fields = ['output']
+    inlines = [RecipeDependencyInline]
 
 class SlotdataInLine(admin.TabularInline):
     model = Slotdata

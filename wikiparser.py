@@ -14,34 +14,108 @@ def parse_pagetitle(title):
     assert(r), 'Failed to parse page title'
     return r.groups()
 
+class Log_Node():
+
+    def __init__(self, value):
+        self.value = value
+        self.children = []
+    
+    def render_as_html(self):
+        try:
+            return '<li>{}</li>'.format(self.value.__html__())
+        except AttributeError:
+            return '<li>{}</li>'.format(str(self.value))
+    
+    def has_children(self):
+        return len(self.children) > 0
+
+    def recurse_log(self, to_level, counter = 0):
+        if counter == to_level:
+            return self
+        else:
+            assert(self.has_children()),' Level {} does not exist'.format(to_level)
+            return self.children[-1].recurse_log(to_level, counter + 1)
+    
+    def add_node(self, value, level = 1):
+        assert(level > 0), 'Cannot add to level 0 of Log_Node'
+        parent_node = self.recurse_log(level - 1)
+        new_node = Log_Node(value)
+        parent_node.children.append(new_node)
+        return new_node   
+
+    def connect_nodes(self, other_node, level):
+        assert(level > 0), 'Cannot add to level 0 of Log_Node'
+        parent_node = self.recurse_log(level - 1)
+        parent_node.children.append(other_node)
+
+    def set(self, value):
+        self.value = value      
+
+    def get_last_level(self, counter = 0):
+        if self.has_children():
+            return self.children[-1].get_last_level(counter + 1)
+        else:
+            return counter
+
+    def render_html(self, counter = 0):
+        try:
+            render_str = '\n' + '\t' * counter + '<li>{}</li>'.format(self.value.__html__())
+        except AttributeError:
+            render_str = '\n' + '\t' * counter + '<li>{}</li>'.format(str(self.value))
+
+        if self.has_children():
+            render_str += ('<ul>')
+            for child in self.children:
+                render_str += child.render_html(counter + 1)
+            render_str += '</ul>'
+
+        return render_str
+
+
+    def render_string(self, counter = 0):
+        render_str = '\n' + '\t' * counter + '* ' + str(self.value)
+        for child in self.children:
+            render_str += child.render_string(counter + 1)
+        
+        return render_str
+
+
+    def render(self, format = 'string'):
+        if format == 'string':
+            return self.render_string()
+        elif format == 'html':
+            return self.render_html()
+        raise AssertionError('Render format must be "string" or "html"')
 
 class BadItemPageException(Exception):
-    def __init__(self, value, start_sublist = False, end_sublist = False):
+    def __init__(self, value):
         self.value = value
-        self.start_sublist = start_sublist
-        self.end_sublist = end_sublist
+        self.children = []
 
     def __str__(self):
         return str(self.value)
+
+    def __html__(self):
+        return str(self)
 
 class NoInfoboxException(BadItemPageException):
     pass 
 
 class IncompletePageException(BadItemPageException):
-    def __init__(self, page_title, scraped_data, start_sublist = False, end_sublist = False):
+    def __init__(self, page_title, scraped_data):
         self.page_title = page_title
-        self.start_sublist = start_sublist
-        self.end_sublist = end_sublist
+        self.children = []
         self.scraped_data = scraped_data
-
-    def __str__(self):
-        create_item_url = reverse('admin:craftDB_item_add', current_app='craftadmin') + '?' + '&'.join([str(key) + '=' + str(value) for key, value in self.scraped_data.items()])
-        return '{0}Page: <a href=\"{1}\" target="_blank">{2}</a> contained incomplete data for item record <a href=\"{3}\" target="_blank">(Create Manually)</a>{4}'.format(
-        '<ul>' if self.start_sublist else '',
+        self.create_item_url = reverse('admin:craftDB_item_add', current_app='craftadmin') + '?' + '&'.join([str(key) + '=' + str(value) for key, value in scraped_data.items()])
+    
+    def __html__(self):
+        return 'Page: <a href=\"{0}\" target="_blank">{1}</a> contained incomplete data for item record <a href=\"{2}\" target="_blank">(Create Manually)</a>'.format(
         'https://ftbwiki.org/{}'.format(self.page_title), 
         self.page_title,
-        create_item_url,
-        '</ul>' if self.end_sublist else '')
+        self.create_item_url)
+
+    def __str__(self):
+        return 'Page: {} contained incomplete data for item record.'.format(self.page_title)
 
 class NoWikiTextException(BadItemPageException):
     pass
@@ -111,14 +185,14 @@ class PageParser():
         #ore_search = re.search(r'\|oredict *= *([\w,;]+?)\n', infobox)
         #fields['oredict'] = ore_search.group(1).split(';') if ore_search else {}
             
-        return item_type, fields
+        return fields
     
     def scrape_recipes(self):
         try:
             recipes = []
             section_num = 1
             for section_name, section in re.findall(r'==+ *(.+?) *==+\n(.+?)^(?===+)', self.content, re.MULTILINE | re.DOTALL):
-                for modification, grid_type, recipe in re.findall(r'(?:^\*\+{{ModLink\|(\w+?)}}\n)?^{{Grid/(.+?)\n\|(.+?)}}$', section, re.MULTILINE | re.DOTALL):
+                for modification, grid_type, recipe in re.findall(r'(?:^\*\+({{ModLink\|.+?}}\n))?^{{Grid/(.+?)\n\|(.+?)}}$', section, re.MULTILINE | re.DOTALL):
                     recipes.append({'header': section_name,
                                     'grid': grid_type, 
                                     'recipe_terms': recipe, 
@@ -133,7 +207,7 @@ class PageParser():
         
         assert(self.item_type), 'Must scrape infobox before getting image so that page Item/Block type is assigned'
         find_image_titled = 'File:{}_{}.png'.format(self.item_type, self.page_name).replace(' ', '_')
-        print(find_image_titled)
+        #print(find_image_titled)
         response = requests.get('https://ftbwiki.org/api.php?action=query&format=json&prop=imageinfo&titles={}&iiprop=url'.format(find_image_titled))
         try:
             raw_url = re.search(r'\[\{\"url\":\"(.+?)\"',response.text).group(1)
@@ -144,7 +218,7 @@ class PageParser():
         
 
 def getIO_crafting_recipe(recipe_text):
-    inputs = []
+    inputs = {}
     output = {'amount' : 1}
     slot_dict = {
         value : index + 1 for index, value in enumerate(str(letter) + str(num) for num in range(1,4) for letter in 'ABC')
@@ -153,15 +227,26 @@ def getIO_crafting_recipe(recipe_text):
         if re.match(r'[A-C][1-3] *= *.+', term):
             slot_code, title = re.search(r'([A-C][1-3]) *= *(.+)',term).groups()
             display_name, mod = re.search(parse_item_re, title).groups()
-            inputs.append({'display_name' : display_name, 'mod' : mod, 'amount' : 1, 'slot' : slot_dict[slot_code], 'page_title' : title})
+            if slot_code in inputs:
+                inputs[slot_code]['display_name'] = display_name
+                inputs[slot_code]['mod'] = mod
+            else:
+                inputs[slot_code] = {'display_name' : display_name, 'mod' : mod, 'amount' : 1, 'slot' : slot_dict[slot_code], 'page_title' : title}
         elif re.match(r'Output *= *', term):
             output['display_name'], output['mod'] = re.search(r'Output *= *' + parse_item_re, term).groups()
             output['page_title'] = re.search(r'Output *= *(.+?)$', term).group(1)
         elif re.match(r'OA *= *', term):
             output['amount'] = re.search(r'OA *= *(\d+)', term).group(1)
-    return inputs, output, []
+        elif re.match(r'[A-C][1-3]-dict *= *', term):
+            slot_code, title = re.search(r'([A-C][1-3])-dict *= *(.+)',term).groups()
+            if slot_code in inputs:
+                inputs[slot_code]['oredict'] = title
+            else:
+                inputs[slot_code] = {'oredict': title, 'amount' : 1, 'slot' : slot_dict[slot_code], 'page_title' : title}
 
-def extract_machineing_recipe(recipe_text):
+    return inputs.values(), output, []
+
+def extract_machining_recipe(recipe_text):
     pass
 
 class NoOreDictException(Exception):
@@ -183,11 +268,4 @@ def scrape_oredict(dict_name):
         if len(results) == 0:
             raise NoOreDictException('OreDict {} contains no items'.format(dict_name))
         return results.keys()
-
-
-#gets mods in modpacks
-#https://ftbwiki.org/api.php?action=ask&query=[[Category:Modpacks]]|format=json|?fulltext
-
-#get all modpacks with mod:
-#https://ftbwiki.org/api.php?action=ask&query=[[Category:Modpacks]][[Has mod::mod_name]]|format=list
 
